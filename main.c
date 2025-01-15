@@ -36,6 +36,7 @@ void *produce(void *args) {
             personalization--;
             stockUnique++;
             printf("Produced one Unique Shirt. Unique Shirt stock: %d\n", stockUnique);
+            pthread_cond_broadcast(&condStock); // signals the clients that a just produced unique shirt is available
         }
 
         else if (cotton >= 500 && tags >= 1 && logos >= 1) {
@@ -44,6 +45,7 @@ void *produce(void *args) {
             logos--;
             stockFast++;
             printf("Produced one Fast Shirt. Fast Shirt stock: %d\n", stockFast);
+            pthread_cond_broadcast(&condStock); // signals the clients that a just produced fast shirt is available
         } 
 
         else {
@@ -67,13 +69,11 @@ void *sell(void *args) {
         if (stockUnique > 0) {
             stockUnique--;
             printf("Sold one Unique Shirt. Unique Shirt stock: %d\n", stockUnique);
-            pthread_cond_signal(&condStock); // signals the seller that a just produced unique shirt is available
         }
 
         else if (stockFast > 0) {
             stockFast--;
             printf("Sold one Fast Shirt. Fast Shirt stock: %d\n", stockFast);
-            pthread_cond_signal(&condStock); // signals the seller that a just produced fast shirt is available
         }
 
         else {
@@ -110,16 +110,30 @@ void *restock(void *args) {
 }
 
 int main() {
-    pthread_t thread_producer, thread_client, thread_supplier;
+    pthread_t thread_producers[2];   // 2 threads for producers
+    pthread_t thread_clients[5];     // 5 threads for clientes
+    pthread_t thread_supplier;       // 1 thread for supplier
 
-    // Creates threads
-    pthread_create(&thread_producer, NULL, produce, NULL);
-    pthread_create(&thread_client, NULL, sell, NULL);
+    // Creates the threads of the producers
+    for (int i = 0; i < 2; i++) {
+        pthread_create(&thread_producers[i], NULL, produce, NULL);
+    }
+
+    // Creates the threads of the clients
+    for (int i = 0; i < 5; i++) {
+        pthread_create(&thread_clients[i], NULL, sell, NULL);
+    }
+
+    // Creates the threads of the supplier
     pthread_create(&thread_supplier, NULL, restock, NULL);
 
-    // Waits threads, which won't stop because of the while loops
-    pthread_join(thread_producer, NULL);
-    pthread_join(thread_client, NULL);
+    // Executes the threads - will require a force break using ctrl C
+    for (int i = 0; i < 2; i++) {
+        pthread_join(thread_producers[i], NULL);
+    }
+    for (int i = 0; i < 5; i++) {
+        pthread_join(thread_clients[i], NULL);
+    }
     pthread_join(thread_supplier, NULL);
 
     return 0;
