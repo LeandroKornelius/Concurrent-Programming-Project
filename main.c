@@ -55,7 +55,7 @@ void *produce(void *args) {
         }
 
         pthread_mutex_unlock(&mutex); // unlocks the materials so other threads can manipulate it
-        sleep(2);
+        sleep(1);
     }
 
     return NULL;
@@ -83,7 +83,7 @@ void *sell(void *args) {
         }
 
         pthread_mutex_unlock(&mutex); // unlocks the stock so other threads can manipulate it
-        sleep(1); 
+        sleep(2); 
     }
 
     return NULL;
